@@ -224,7 +224,25 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                     methodsToCheck)) {
                 return false;
             }
+        } else if (exp instanceof J.Ternary) {
+            J.Ternary t = (J.Ternary) exp;
+
+            if (!processExpression(t.getCondition(), inputVariables, localVariables, variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
+
+            if (!processExpression(t.getFalsePart(), inputVariables, localVariables, variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
+
+            if (!processExpression(t.getTruePart(), inputVariables, localVariables, variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
         }
+
         return true;
     }
 

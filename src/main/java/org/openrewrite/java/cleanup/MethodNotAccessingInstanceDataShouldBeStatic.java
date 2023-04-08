@@ -134,36 +134,15 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 }
             } else if (s instanceof J.Try) {
                 final J.Try tryB = (J.Try) s;
-                if (!processBody(tryB.getBody().getStatements(), inputVariables, localVariables,
-                        variablesToCheck,
+                if (!processTryCatchBlock(tryB, inputVariables, localVariables, variablesToCheck,
                         methodsToCheck)) {
                     return false;
                 }
-
-                for (J.Try.Catch c : tryB.getCatches()) {
-                    final Set<String> parameters = new HashSet<>();
-
-                    final J.VariableDeclarations vd = c.getParameter().getTree();
-                    for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-                        parameters.add(v.getSimpleName());
-                    }
-                    final Set<String> combined = new HashSet<>();
-                    combined.addAll(localVariables);
-                    combined.addAll(parameters);
-
-                    if (!processBody(c.getBody().getStatements(), combined, inputVariables,
-                            variablesToCheck,
-                            methodsToCheck)) {
-                        return false;
-                    }
-                }
-
-                if (tryB.getFinally() != null) {
-                    if (!processBody(tryB.getFinally().getStatements(), inputVariables, localVariables,
-                            variablesToCheck,
-                            methodsToCheck)) {
-                        return false;
-                    }
+            } else if (s instanceof J.ForEachLoop) {
+                final J.ForEachLoop feLoop = (J.ForEachLoop) s;
+                if (!processForEachLoop(feLoop, inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
                 }
             } else if (s instanceof J.ForLoop) {
                 final J.ForLoop fl = (J.ForLoop) s;
@@ -199,8 +178,6 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
 
             /*
              * TODO cover the following cases
-             *  - for each loop
-             *  - try catch block
              *  - do while block
              *  - ternary operator
              *  - switch block
@@ -398,5 +375,68 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 }
             }
         }
+    }
+
+    private boolean processTryCatchBlock(final J.Try tryB, final Set<String> inputVariables,
+                                         final Set<String> localVariables, final Set<String> variablesToCheck,
+                                         final Set<String> methodsToCheck) {
+        if (!processBody(tryB.getBody().getStatements(), inputVariables, localVariables,
+                variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        for (J.Try.Catch c : tryB.getCatches()) {
+            final Set<String> parameters = new HashSet<>();
+
+            final J.VariableDeclarations vd = c.getParameter().getTree();
+            for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+                parameters.add(v.getSimpleName());
+            }
+            final Set<String> combined = new HashSet<>();
+            combined.addAll(localVariables);
+            combined.addAll(parameters);
+
+            if (!processBody(c.getBody().getStatements(), combined, inputVariables,
+                    variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
+        }
+
+        if (tryB.getFinally() != null) {
+            if (!processBody(tryB.getFinally().getStatements(), inputVariables, localVariables,
+                    variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean processForEachLoop(final J.ForEachLoop feLoop, final Set<String> inputVariables,
+                                       final Set<String> localVariables, final Set<String> variablesToCheck,
+                                       final Set<String> methodsToCheck) {
+        final Set<String> loopVariables = new HashSet<>();
+
+        final J.VariableDeclarations vd = feLoop.getControl().getVariable();
+        for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+            loopVariables.add(v.getSimpleName());
+        }
+
+        final Set<String> combined = new HashSet<>();
+        combined.addAll(localVariables);
+        combined.addAll(loopVariables);
+
+        processIdentifier((J.Identifier) feLoop.getControl().getIterable(), inputVariables, localVariables,
+                variablesToCheck);
+
+        if (!processBody(((J.Block) feLoop.getBody()).getStatements(), inputVariables, localVariables,
+                variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        return true;
     }
 }

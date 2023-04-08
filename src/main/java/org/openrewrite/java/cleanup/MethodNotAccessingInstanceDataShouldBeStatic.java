@@ -182,6 +182,33 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            } else if (s instanceof J.Switch) {
+                final J.Switch sw = (J.Switch) s;
+
+                if (!processExpression(sw.getSelector().getTree(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
+
+                if (!processBody(sw.getCases().getStatements(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
+            } else if (s instanceof J.Case) {
+                final J.Case ca = (J.Case) s;
+
+                if (ca.getStatements() != null) {
+                    if (!processBody(ca.getStatements(), inputVariables, localVariables, variablesToCheck,
+                            methodsToCheck)) {
+                        return false;
+                    }
+                }
+            } else if (s instanceof J.Throw) {
+                final J.Throw th = (J.Throw) s;
+                if (!processExpression(th.getException(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
             } else if (s instanceof J.Return) {
                 final J.Return r = (J.Return) s;
                 if (!processExpression(r.getExpression(), inputVariables, localVariables, variablesToCheck,
@@ -189,12 +216,6 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                     return false;
                 }
             }
-
-            /*
-             * TODO cover the following cases
-             *  - ternary operator
-             *  - switch block
-             * */
         }
 
         return true;

@@ -146,14 +146,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 }
             } else if (s instanceof J.ForLoop) {
                 final J.ForLoop fl = (J.ForLoop) s;
-                final Set<String> loopVariables = new HashSet<>();
-                final J.ForLoop.Control control = fl.getControl();
-
-                // TODO finish for loop
-
-                if (!processBody(((J.Block) fl.getBody()).getStatements(), inputVariables, localVariables,
-                        variablesToCheck,
-                        methodsToCheck)) {
+                if (!processForLoop(fl, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                     return false;
                 }
             } else if (s instanceof J.WhileLoop) {
@@ -209,6 +202,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            } else if (s instanceof J.Unary) {
+                final J.Unary u = (J.Unary) s;
+                if (!processExpression(u.getExpression(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
             } else if (s instanceof J.Return) {
                 final J.Return r = (J.Return) s;
                 if (!processExpression(r.getExpression(), inputVariables, localVariables, variablesToCheck,
@@ -231,9 +230,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             }
         } else if (exp instanceof J.Identifier) {
             J.Identifier i = (J.Identifier) exp;
-            if (!inputVariables.contains(i.getSimpleName()) && !localVariables.contains(i.getSimpleName())) {
-                variablesToCheck.add(i.getSimpleName());
-            }
+            processIdentifier(i, inputVariables, localVariables, variablesToCheck);
         } else if (exp instanceof J.Binary) {
             J.Binary b = (J.Binary) exp;
             if (!processBinary(b, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
@@ -304,6 +301,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             } else if (exp instanceof J.Binary) {
                 J.Binary b = (J.Binary) exp;
                 if (!processBinary(b, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
+                    return false;
+                }
+            } else if (exp instanceof J.Unary) {
+                final J.Unary u = (J.Unary) exp;
+                if (!processExpression(u.getExpression(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
                     return false;
                 }
             }
@@ -449,7 +452,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             combined.addAll(localVariables);
             combined.addAll(parameters);
 
-            if (!processBody(c.getBody().getStatements(), combined, inputVariables,
+            if (!processBody(c.getBody().getStatements(), combined, localVariables,
                     variablesToCheck,
                     methodsToCheck)) {
                 return false;
@@ -480,10 +483,51 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         combined.addAll(localVariables);
         combined.addAll(loopVariables);
 
-        processIdentifier((J.Identifier) feLoop.getControl().getIterable(), inputVariables, localVariables,
+        processIdentifier((J.Identifier) feLoop.getControl().getIterable(), combined, localVariables,
                 variablesToCheck);
 
-        if (!processBody(((J.Block) feLoop.getBody()).getStatements(), inputVariables, localVariables,
+        if (!processBody(((J.Block) feLoop.getBody()).getStatements(), combined, localVariables,
+                variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean processForLoop(final J.ForLoop fl, final Set<String> inputVariables,
+                                   final Set<String> localVariables, final Set<String> variablesToCheck,
+                                   final Set<String> methodsToCheck) {
+        final Set<String> loopVariables = new HashSet<>();
+        final J.ForLoop.Control control = fl.getControl();
+
+        for (Statement flStatement : control.getInit()) {
+            if (flStatement instanceof J.VariableDeclarations) {
+                J.VariableDeclarations vd = (J.VariableDeclarations) flStatement;
+
+                for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+                    loopVariables.add(v.getSimpleName());
+                }
+            }
+        }
+
+        final Set<String> combined = new HashSet<>();
+        combined.addAll(inputVariables);
+        combined.addAll(loopVariables);
+
+        if (!processExpression(control.getCondition(), combined, localVariables,
+                variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        if (!processBody(control.getUpdate(), combined, localVariables,
+                variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        if (!processBody(((J.Block) fl.getBody()).getStatements(), combined, localVariables,
                 variablesToCheck,
                 methodsToCheck)) {
             return false;

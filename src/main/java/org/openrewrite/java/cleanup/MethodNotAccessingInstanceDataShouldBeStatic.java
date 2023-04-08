@@ -168,6 +168,20 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            } else if (s instanceof J.DoWhileLoop) {
+                final J.DoWhileLoop dwLoop = (J.DoWhileLoop) s;
+
+                if (!processBody(((J.Block) dwLoop.getBody()).getStatements(), inputVariables, localVariables,
+                        variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
+
+                if (!processExpression(dwLoop.getWhileCondition().getTree(), inputVariables, localVariables,
+                        variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
             } else if (s instanceof J.Return) {
                 final J.Return r = (J.Return) s;
                 if (!processExpression(r.getExpression(), inputVariables, localVariables, variablesToCheck,
@@ -178,7 +192,6 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
 
             /*
              * TODO cover the following cases
-             *  - do while block
              *  - ternary operator
              *  - switch block
              * */

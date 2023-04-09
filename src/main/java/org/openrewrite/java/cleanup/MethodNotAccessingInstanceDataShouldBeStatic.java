@@ -118,9 +118,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 final J.Assignment a = (J.Assignment) s;
                 final J.Identifier v = (J.Identifier) a.getVariable();
 
-                if (!inputVariables.contains(v.getSimpleName()) && !localVariables.contains(v.getSimpleName())) {
-                    variablesToCheck.add(v.getSimpleName());
-                }
+                processIdentifier(v, inputVariables, localVariables, variablesToCheck);
 
                 if (!processExpression(a.getAssignment(), inputVariables, localVariables, variablesToCheck,
                         methodsToCheck)) {
@@ -267,11 +265,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private boolean processMethodInvocation(final J.MethodInvocation mi, final Set<String> inputVariables,
                                             final Set<String> localVariables, final Set<String> variablesToCheck,
                                             final Set<String> methodsToCheck) {
-        if (mi.getSelect() instanceof J.Identifier) {
+
+        if (mi.getSelect() == null) {
+            methodsToCheck.add(mi.getSimpleName());
+        } else if (mi.getSelect() instanceof J.Identifier) {
             J.Identifier i = (J.Identifier) mi.getSelect();
             processIdentifier(i, inputVariables, localVariables, variablesToCheck);
-        } else if (mi.getSelect() == null) {
-            methodsToCheck.add(mi.getSimpleName());
         } else if (mi.getSelect() instanceof J.MethodInvocation) {
             if (!processMethodInvocation((J.MethodInvocation) mi.getSelect(), inputVariables, localVariables,
                     variablesToCheck, methodsToCheck)) {

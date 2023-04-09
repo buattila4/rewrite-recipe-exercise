@@ -4130,4 +4130,64 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingVariableWithSuperKeyword() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final String getValue() {
+                                            return super.a;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodCallingMethodWithSuperKeyword() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final String getValue() {
+                                            return super.b();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingVariableWithSuperKeyword() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private String getValue() {
+                                            return super.a;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodCallingMethodWithSuperKeyword() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private String getValue() {
+                                            return super.b();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

@@ -13,6 +13,8 @@ import static java.util.Collections.emptyList;
 
 
 public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
+    private static final String SUPER_KEYWORD = "super";
+
     @Override
     public String getDisplayName() {
         return "Methods not accessing instance data should be static";
@@ -257,6 +259,15 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                     methodsToCheck)) {
                 return false;
             }
+        } else if (exp instanceof J.FieldAccess) {
+            final J.FieldAccess fa = (J.FieldAccess) exp;
+            if (fa.getTarget() instanceof J.Identifier) {
+                final J.Identifier targetID = (J.Identifier) fa.getTarget();
+
+                if (targetID.getSimpleName().equals(SUPER_KEYWORD)) {
+                    return false;
+                }
+            }
         }
 
         return true;
@@ -270,6 +281,9 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             methodsToCheck.add(mi.getSimpleName());
         } else if (mi.getSelect() instanceof J.Identifier) {
             J.Identifier i = (J.Identifier) mi.getSelect();
+            if (i.getSimpleName().equals(SUPER_KEYWORD)) {
+                return false;
+            }
             processIdentifier(i, inputVariables, localVariables, variablesToCheck);
         } else if (mi.getSelect() instanceof J.MethodInvocation) {
             if (!processMethodInvocation((J.MethodInvocation) mi.getSelect(), inputVariables, localVariables,

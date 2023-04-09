@@ -102,13 +102,8 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         for (Statement s : statements) {
             if (s instanceof J.VariableDeclarations) {
                 final J.VariableDeclarations vd = (J.VariableDeclarations) s;
-                for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-                    localVariables.add(v.getSimpleName());
-
-                    if (!processExpression(v.getInitializer(), inputVariables, localVariables, variablesToCheck,
-                            methodsToCheck)) {
-                        return false;
-                    }
+                if (!processVariableDeclaration(vd, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
+                    return false;
                 }
             } else if (s instanceof J.MethodInvocation) {
                 final J.MethodInvocation mi = (J.MethodInvocation) s;
@@ -118,12 +113,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 }
             } else if (s instanceof J.Assignment) {
                 final J.Assignment a = (J.Assignment) s;
-                final J.Identifier v = (J.Identifier) a.getVariable();
-
-                processIdentifier(v, inputVariables, localVariables, variablesToCheck);
-
-                if (!processExpression(a.getAssignment(), inputVariables, localVariables, variablesToCheck,
-                        methodsToCheck)) {
+                if (!processAssignment(a, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                     return false;
                 }
             } else if (s instanceof J.If) {
@@ -214,6 +204,36 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            }
+        }
+
+        return true;
+    }
+
+    private boolean processAssignment(final J.Assignment a, final Set<String> inputVariables,
+                                      final Set<String> localVariables, final Set<String> variablesToCheck,
+                                      final Set<String> methodsToCheck) {
+        final J.Identifier v = (J.Identifier) a.getVariable();
+
+        processIdentifier(v, inputVariables, localVariables, variablesToCheck);
+
+        if (!processExpression(a.getAssignment(), inputVariables, localVariables, variablesToCheck,
+                methodsToCheck)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private boolean processVariableDeclaration(final J.VariableDeclarations vd, final Set<String> inputVariables,
+                                               final Set<String> localVariables, final Set<String> variablesToCheck,
+                                               final Set<String> methodsToCheck) {
+        for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+            localVariables.add(v.getSimpleName());
+
+            if (!processExpression(v.getInitializer(), inputVariables, localVariables, variablesToCheck,
+                    methodsToCheck)) {
+                return false;
             }
         }
 
@@ -496,8 +516,8 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         combined.addAll(localVariables);
         combined.addAll(loopVariables);
 
-        processIdentifier((J.Identifier) feLoop.getControl().getIterable(), combined, localVariables,
-                variablesToCheck);
+        processExpression(feLoop.getControl().getIterable(), combined, localVariables, variablesToCheck,
+                methodsToCheck);
 
         if (!processBody(((J.Block) feLoop.getBody()).getStatements(), combined, localVariables,
                 variablesToCheck,
@@ -514,12 +534,16 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         final Set<String> loopVariables = new HashSet<>();
         final J.ForLoop.Control control = fl.getControl();
 
-        for (Statement flStatement : control.getInit()) {
-            if (flStatement instanceof J.VariableDeclarations) {
-                J.VariableDeclarations vd = (J.VariableDeclarations) flStatement;
-
-                for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-                    loopVariables.add(v.getSimpleName());
+        for (Statement s : control.getInit()) {
+            if (s instanceof J.VariableDeclarations) {
+                final J.VariableDeclarations vd = (J.VariableDeclarations) s;
+                if (!processVariableDeclaration(vd, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
+                    return false;
+                }
+            } else if (s instanceof J.Assignment) {
+                final J.Assignment a = (J.Assignment) s;
+                if (!processAssignment(a, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
+                    return false;
                 }
             }
         }

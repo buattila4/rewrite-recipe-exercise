@@ -4190,4 +4190,1798 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private void getSomething() {
+                                            for (String s : staticVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private static void getSomething() {
+                                            for (String s : staticVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public final void getSomething() {
+                                            for (String s : staticVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public static void getSomething() {
+                                            for (String s : staticVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private void getSomething() {
+                                            for (String s : instanceVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public final void getSomething() {
+                                            for (String s : instanceVariable) {
+                                                s.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private void getSomething() {
+                                            for (String s : staticMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static void getSomething() {
+                                            for (String s : staticMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public final void getSomething() {
+                                            for (String s : staticMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public static void getSomething() {
+                                            for (String s : staticMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private void getSomething() {
+                                            for (String s : instanceMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForEachLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public final void getSomething() {
+                                            for (String s : instanceMethod()) {
+                                                s.toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private static void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public final void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public static void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        private void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                instanceVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static List<String> staticVariable = new ArrayList<>();
+                                        private List<String> instanceVariable = new ArrayList<>();
+
+                                        public final void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                instanceVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private static void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public final void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public static void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        private void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                instanceMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForEachLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.ArrayList;
+                                    import java.util.List;
+
+                                    class A {
+                                        public final void getSomething(final List<String> inputList) {
+                                            for (String s : inputList) {
+                                                instanceMethod().toString();
+                                            }
+                                        }
+
+                                        private static List<String> staticMethod() {
+                                            return new ArrayList<>();
+                                        }
+
+                                        public List<String> instanceMethod() {
+                                            return new ArrayList<>();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        private static void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        public static void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                instanceVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                   class A {
+                                        private static String staticVariable = "static";
+                                        private String instanceVariable = "instance";
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                instanceVariable.toString();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                staticMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                instanceMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForLoopBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++) {
+                                                instanceMethod().toString();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "static";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "instance";
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = staticVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private static void getSomething() {
+                                            for (int i = staticVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = staticVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public static void getSomething() {
+                                            for (int i = staticVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = instanceVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                   class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = instanceVariable; i < 10; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = staticMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void getSomething() {
+                                            for (int i = staticMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = staticMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void getSomething() {
+                                            for (int i = staticMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = instanceMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForLoopInit() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = instanceMethod(); i < 10; i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < staticVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private static void getSomething() {
+                                            for (int i = 0; i < staticVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < staticVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public static void getSomething() {
+                                            for (int i = 0; i < staticVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < instanceVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                   class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < instanceVariable; i++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < staticMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void getSomething() {
+                                            for (int i = 0; i < staticMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < staticMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void getSomething() {
+                                            for (int i = 0; i < staticMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < instanceMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForLoopCondition() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < instanceMethod(); i++) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private static void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public static void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++, instanceVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                   class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++, instanceVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void getSomething() {
+                                            for (int i = 0; i < 10; i++, staticMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void getSomething() {
+                                            for (int i = 0; i < 10; i++, instanceMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInForLoopUpdate() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void getSomething() {
+                                            for (int i = 0; i < 10; i++, instanceMethod()) {
+                                            }
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 2;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 1;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInForLoopInitAsLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (staticVariable = 0; staticVariable < 10; staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private static void getSomething() {
+                                            for (staticVariable = 0; staticVariable < 10; staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInForLoopInitAsLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (staticVariable = 0; staticVariable < 10; staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public static void getSomething() {
+                                            for (staticVariable = 0; staticVariable < 10; staticVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInForLoopInitAsLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        private void getSomething() {
+                                            for (instanceVariable = 0; instanceVariable < 10; instanceVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInForLoopInitAsLoopVariable() {
+        rewriteRun(
+                java(
+                        """
+                                   class A {
+                                        private static int staticVariable = 2;
+                                        private int instanceVariable = 1;
+
+                                        public final void getSomething() {
+                                            for (instanceVariable = 0; instanceVariable < 10; instanceVariable++) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            private String getSomething() {
+                                                return staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            private static String getSomething() {
+                                                return staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            public final String getSomething() {
+                                                return staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            public static String getSomething() {
+                                                return staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            private String getSomething() {
+                                                return instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        class Inner {
+                                            public final String getSomething() {
+                                                return instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            private String getSomething() {
+                                                return staticMethod();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            private static String getSomething() {
+                                                return staticMethod();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            public final String getSomething() {
+                                                return staticMethod();
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            public static String getSomething() {
+                                                return staticMethod();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            private String getSomething() {
+                                                return instanceMethod();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodFromOuterClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+
+                                        class Inner {
+                                            public final String getSomething() {
+                                                return instanceMethod();
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

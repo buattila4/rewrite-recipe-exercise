@@ -5984,4 +5984,874 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - instanceVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - instanceVariable) - b);
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - staticMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - instanceMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInLambdaExpression() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> (a - instanceMethod()) - b);
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - instanceVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = 2;
+
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - instanceVariable) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public static int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - staticMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        private int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - instanceMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInLambdaExpressionBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.PriorityQueue;
+
+                                    class A {
+                                        public final int getSomething() {
+                                            final PriorityQueue<Integer> queue = new PriorityQueue<>((a, b) -> {
+                                                return (a - instanceMethod()) - b;
+                                            });
+                                            return queue.poll();
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        private void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        private static void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        public final void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        public static void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        private void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return instanceVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static int staticVariable = 1;
+                                        private int instanceVariable = -1;
+
+                                        public final void doSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return instanceVariable;
+                                                }
+                                            });
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private static void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        public final void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        public static void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return staticMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        private void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return instanceMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInNewClassBody() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.util.Comparator;
+                                    import java.util.List;
+                                    import java.util.ArrayList;
+
+                                    class A {
+                                        public final void getSomething() {
+                                            List<String> list = new ArrayList<>();
+
+                                            list.sort(new Comparator<String>() {
+                                                @Override
+                                                public int compare(String o1, String o2) {
+                                                    return instanceMethod();
+                                                }
+                                            });
+                                        }
+
+                                        private static int staticMethod() {
+                                            return 1;
+                                        }
+
+                                        public int instanceMethod() {
+                                            return 2;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

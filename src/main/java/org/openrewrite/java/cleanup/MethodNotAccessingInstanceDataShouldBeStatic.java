@@ -204,6 +204,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            } else if (s instanceof J.MethodDeclaration) {
+                final J.MethodDeclaration md = (J.MethodDeclaration) s;
+                if (!processBody(md.getBody().getStatements(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
             }
         }
 
@@ -244,26 +250,26 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                                       final Set<String> localVariables, final Set<String> variablesToCheck,
                                       final Set<String> methodsToCheck) {
         if (exp instanceof J.MethodInvocation) {
-            J.MethodInvocation mi = (J.MethodInvocation) exp;
+            final J.MethodInvocation mi = (J.MethodInvocation) exp;
             if (!processMethodInvocation(mi, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                 return false;
             }
         } else if (exp instanceof J.Identifier) {
-            J.Identifier i = (J.Identifier) exp;
+            final J.Identifier i = (J.Identifier) exp;
             processIdentifier(i, inputVariables, localVariables, variablesToCheck);
         } else if (exp instanceof J.Binary) {
-            J.Binary b = (J.Binary) exp;
+            final J.Binary b = (J.Binary) exp;
             if (!processBinary(b, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                 return false;
             }
         } else if (exp instanceof J.NewClass) {
-            J.NewClass nc = (J.NewClass) exp;
+            final J.NewClass nc = (J.NewClass) exp;
             if (!processArguments(nc.getArguments(), inputVariables, localVariables, variablesToCheck,
                     methodsToCheck)) {
                 return false;
             }
         } else if (exp instanceof J.Ternary) {
-            J.Ternary t = (J.Ternary) exp;
+            final J.Ternary t = (J.Ternary) exp;
 
             if (!processExpression(t.getCondition(), inputVariables, localVariables, variablesToCheck,
                     methodsToCheck)) {
@@ -300,7 +306,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         if (mi.getSelect() == null) {
             methodsToCheck.add(mi.getSimpleName());
         } else if (mi.getSelect() instanceof J.Identifier) {
-            J.Identifier i = (J.Identifier) mi.getSelect();
+            final J.Identifier i = (J.Identifier) mi.getSelect();
             if (i.getSimpleName().equals(SUPER_KEYWORD)) {
                 return false;
             }
@@ -319,20 +325,20 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         return true;
     }
 
-    private boolean processArguments(final List<Expression> a, final Set<String> inputVariables,
+    private boolean processArguments(final List<Expression> args, final Set<String> inputVariables,
                                      final Set<String> localVariables, final Set<String> variablesToCheck,
                                      final Set<String> methodsToCheck) {
-        for (Expression exp : a) {
+        for (Expression exp : args) {
             if (exp instanceof J.Identifier) {
-                J.Identifier i = (J.Identifier) exp;
+                final J.Identifier i = (J.Identifier) exp;
                 processIdentifier(i, inputVariables, localVariables, variablesToCheck);
             } else if (exp instanceof J.MethodInvocation) {
-                J.MethodInvocation vmi = (J.MethodInvocation) exp;
+                final J.MethodInvocation vmi = (J.MethodInvocation) exp;
                 if (!processMethodInvocation(vmi, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                     return false;
                 }
             } else if (exp instanceof J.Binary) {
-                J.Binary b = (J.Binary) exp;
+                final J.Binary b = (J.Binary) exp;
                 if (!processBinary(b, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                     return false;
                 }
@@ -342,7 +348,30 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                         methodsToCheck)) {
                     return false;
                 }
+            } else if (exp instanceof J.Lambda) {
+                final J.Lambda l = (J.Lambda) exp;
+
+                if (l.getBody() instanceof J.Binary) {
+                    final J.Binary bi = (J.Binary) l.getBody();
+                    if (!processBinary(bi, inputVariables, localVariables, variablesToCheck,
+                            methodsToCheck)) {
+                        return false;
+                    }
+                } else if (l.getBody() instanceof J.Block) {
+                    final J.Block block = (J.Block) l.getBody();
+                    if (!processBody(block.getStatements(), inputVariables, localVariables, variablesToCheck,
+                            methodsToCheck)) {
+                        return false;
+                    }
+                }
+            } else if (exp instanceof J.NewClass) {
+                final J.NewClass nc = (J.NewClass) exp;
+                if (!processBody(nc.getBody().getStatements(), inputVariables, localVariables, variablesToCheck,
+                        methodsToCheck)) {
+                    return false;
+                }
             }
+
         }
 
         return true;
@@ -352,25 +381,34 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                                   final Set<String> localVariables, final Set<String> variablesToCheck,
                                   final Set<String> methodsToCheck) {
         if (b.getLeft() instanceof J.Identifier) {
-            J.Identifier i = (J.Identifier) b.getLeft();
+            final J.Identifier i = (J.Identifier) b.getLeft();
             processIdentifier(i, inputVariables, localVariables, variablesToCheck);
         } else if (b.getLeft() instanceof J.MethodInvocation) {
-            J.MethodInvocation mi = (J.MethodInvocation) b.getLeft();
+            final J.MethodInvocation mi = (J.MethodInvocation) b.getLeft();
             if (!processMethodInvocation(mi, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                 return false;
             }
         } else if (b.getLeft() instanceof J.Binary) {
-            J.Binary lb = (J.Binary) b.getLeft();
+            final J.Binary lb = (J.Binary) b.getLeft();
             if (!processBinary(lb, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                 return false;
+            }
+        } else if (b.getLeft() instanceof J.Parentheses) {
+            final J.Parentheses p = (J.Parentheses) b.getLeft();
+
+            if (p.getTree() instanceof J.Binary) {
+                final J.Binary lb = (J.Binary) p.getTree();
+                if (!processBinary(lb, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
+                    return false;
+                }
             }
         }
 
         if (b.getRight() instanceof J.Identifier) {
-            J.Identifier i = (J.Identifier) b.getRight();
+            final J.Identifier i = (J.Identifier) b.getRight();
             processIdentifier(i, inputVariables, localVariables, variablesToCheck);
         } else if (b.getRight() instanceof J.MethodInvocation) {
-            J.MethodInvocation mi = (J.MethodInvocation) b.getRight();
+            final J.MethodInvocation mi = (J.MethodInvocation) b.getRight();
             if (!processMethodInvocation(mi, inputVariables, localVariables, variablesToCheck, methodsToCheck)) {
                 return false;
             }

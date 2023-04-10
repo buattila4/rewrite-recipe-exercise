@@ -6854,4 +6854,736 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                                String s = staticVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private static void doSomething() {
+                                            try {
+                                                String s = staticVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                                String s = staticVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public static void doSomething() {
+                                            try {
+                                                String s = staticVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                                String s = instanceVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                                String s = instanceVariable;
+                                            } catch (Exception e) {
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                                String s = staticMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void doSomething() {
+                                            try {
+                                                String s = staticMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                                String s = staticMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void doSomething() {
+                                            try {
+                                                String s = staticMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                                String s = instanceMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInTryBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                                String s = instanceMethod();
+                                            } catch (Exception e) {
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private static void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public static void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = instanceMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInTryCatchBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                            } catch (Exception e) {
+                                                String s = instanceMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private static void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public static void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = instanceVariable;
+                                            }
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = staticMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = instanceMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodInTryFinallyBody() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void doSomething() {
+                                            try {
+                                            } finally {
+                                                String s = instanceMethod();
+                                            }
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

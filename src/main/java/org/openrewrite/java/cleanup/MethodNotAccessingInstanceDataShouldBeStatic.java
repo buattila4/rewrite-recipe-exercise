@@ -60,20 +60,20 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                     }
 
                     if (!variablesToCheck.isEmpty() || !methodsToCheck.isEmpty()) {
-                        final Set<String> instanceVariables = new HashSet<>();
-                        final Set<String> instanceMethods = new HashSet<>();
+                        final Set<String> staticVariables = new HashSet<>();
+                        final Set<String> staticMethods = new HashSet<>();
 
                         final Cursor parent = getCursor().getParent().getParent().getParent();
-                        collectInstanceDataFromOuterClass(parent, instanceVariables, instanceMethods);
+                        collectInstanceDataFromOuterClass(parent, staticVariables, staticMethods);
 
                         for (String v : variablesToCheck) {
-                            if (instanceVariables.contains(v)) {
+                            if (!staticVariables.contains(v)) {
                                 return md;
                             }
                         }
 
                         for (String m : methodsToCheck) {
-                            if (instanceMethods.contains(m)) {
+                            if (!staticMethods.contains(m)) {
                                 return md;
                             }
                         }
@@ -351,6 +351,15 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             } else if (exp instanceof J.Lambda) {
                 final J.Lambda l = (J.Lambda) exp;
 
+                for (J p : l.getParameters().getParameters()) {
+                    if (p instanceof J.VariableDeclarations) {
+                        final J.VariableDeclarations vd = (J.VariableDeclarations) p;
+                        for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+                            localVariables.add(v.getSimpleName());
+                        }
+                    }
+                }
+
                 if (l.getBody() instanceof J.Binary) {
                     final J.Binary bi = (J.Binary) l.getBody();
                     if (!processBinary(bi, inputVariables, localVariables, variablesToCheck,
@@ -455,8 +464,8 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     }
 
     private void collectInstanceDataFromOuterClass(final Cursor parent,
-                                                   final Set<String> instanceVariables,
-                                                   final Set<String> instanceMethods) {
+                                                   final Set<String> staticVariables,
+                                                   final Set<String> staticMethods) {
         if (parent.getValue() instanceof J.ClassDeclaration) {
             final J.ClassDeclaration parentClass = parent.getValue();
 
@@ -464,23 +473,23 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                 if (s instanceof J.VariableDeclarations) {
                     final J.VariableDeclarations vd = (J.VariableDeclarations) s;
 
-                    if (!vd.hasModifier(J.Modifier.Type.Static)) {
+                    if (vd.hasModifier(J.Modifier.Type.Static)) {
                         for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-                            instanceVariables.add(v.getSimpleName());
+                            staticVariables.add(v.getSimpleName());
                         }
                     }
                 } else if (s instanceof J.MethodDeclaration) {
                     final J.MethodDeclaration md = (J.MethodDeclaration) s;
-                    if (!md.hasModifier(J.Modifier.Type.Static)) {
-                        instanceMethods.add(md.getSimpleName());
+                    if (md.hasModifier(J.Modifier.Type.Static)) {
+                        staticMethods.add(md.getSimpleName());
                     }
                 }
             }
 
             if (parent.getParent() != null && parent.getParent().getParent() != null && parent.getParent().getParent()
                     .getParent() != null) {
-                collectInstanceDataFromOuterClass(parent.getParent().getParent().getParent(), instanceVariables,
-                        instanceMethods);
+                collectInstanceDataFromOuterClass(parent.getParent().getParent().getParent(), staticVariables,
+                        staticMethods);
             }
 
             if (parentClass.getExtends() != null) {
@@ -491,13 +500,13 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
 
                 for (JavaType.Method method : parentFq.getMethods()) {
                     System.out.println(method);
-                    // TODO check if method is not static and ad it to the instanceMethods
+                    // TODO check if method is static and ad it to the staticMethods
                 }
 
 
                 for (JavaType.Variable member : parentFq.getMembers()) {
                     System.out.println(member);
-                    // TODO check if member is not static and add it to the instanceVariables
+                    // TODO check if member is static and add it to the staticVariables
                 }
             }
         }
@@ -543,21 +552,15 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private boolean processForEachLoop(final J.ForEachLoop feLoop, final Set<String> inputVariables,
                                        final Set<String> localVariables, final Set<String> variablesToCheck,
                                        final Set<String> methodsToCheck) {
-        final Set<String> loopVariables = new HashSet<>();
-
         final J.VariableDeclarations vd = feLoop.getControl().getVariable();
         for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-            loopVariables.add(v.getSimpleName());
+            localVariables.add(v.getSimpleName());
         }
 
-        final Set<String> combined = new HashSet<>();
-        combined.addAll(localVariables);
-        combined.addAll(loopVariables);
-
-        processExpression(feLoop.getControl().getIterable(), combined, localVariables, variablesToCheck,
+        processExpression(feLoop.getControl().getIterable(), inputVariables, localVariables, variablesToCheck,
                 methodsToCheck);
 
-        if (!processBody(((J.Block) feLoop.getBody()).getStatements(), combined, localVariables,
+        if (!processBody(((J.Block) feLoop.getBody()).getStatements(), inputVariables, localVariables,
                 variablesToCheck,
                 methodsToCheck)) {
             return false;
@@ -569,7 +572,6 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private boolean processForLoop(final J.ForLoop fl, final Set<String> inputVariables,
                                    final Set<String> localVariables, final Set<String> variablesToCheck,
                                    final Set<String> methodsToCheck) {
-        final Set<String> loopVariables = new HashSet<>();
         final J.ForLoop.Control control = fl.getControl();
 
         for (Statement s : control.getInit()) {
@@ -586,23 +588,19 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             }
         }
 
-        final Set<String> combined = new HashSet<>();
-        combined.addAll(inputVariables);
-        combined.addAll(loopVariables);
-
-        if (!processExpression(control.getCondition(), combined, localVariables,
+        if (!processExpression(control.getCondition(), inputVariables, localVariables,
                 variablesToCheck,
                 methodsToCheck)) {
             return false;
         }
 
-        if (!processBody(control.getUpdate(), combined, localVariables,
+        if (!processBody(control.getUpdate(), inputVariables, localVariables,
                 variablesToCheck,
                 methodsToCheck)) {
             return false;
         }
 
-        if (!processBody(((J.Block) fl.getBody()).getStatements(), combined, localVariables,
+        if (!processBody(((J.Block) fl.getBody()).getStatements(), inputVariables, localVariables,
                 variablesToCheck,
                 methodsToCheck)) {
             return false;

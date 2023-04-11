@@ -1589,7 +1589,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private int getValue() {
-                                            do  {
+                                            do {
                                                 String l = "";
                                             } while (staticVariable == 3);
                                             return 22;
@@ -1602,7 +1602,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private static int getValue() {
-                                            do  {
+                                            do {
                                                 String l = "";
                                             } while (staticVariable == 3);
                                             return 22;
@@ -1698,7 +1698,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private int getSomething() {
-                                            do  {
+                                            do {
                                                 String l = "";
                                             } while (staticMethod() == 3);
                                             return 22;
@@ -1718,7 +1718,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private static int getSomething() {
-                                            do  {
+                                            do {
                                                 String l = "";
                                             } while (staticMethod() == 3);
                                             return 22;
@@ -2883,8 +2883,8 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private void setValue() {
-                                           int i = 1;
-                                           i = staticVariable;
+                                            int i = 1;
+                                            i = staticVariable;
                                         }
                                     }
                                 """,
@@ -2894,8 +2894,8 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private static void setValue() {
-                                           int i = 1;
-                                           i = staticVariable;
+                                            int i = 1;
+                                            i = staticVariable;
                                         }
                                     }
                                 """
@@ -2980,8 +2980,8 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private void setValue() {
-                                           int i = 1;
-                                           i = staticMethod();
+                                            int i = 1;
+                                            i = staticMethod();
                                         }
 
                                         private static int staticMethod() {
@@ -2998,8 +2998,8 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         private int instanceVariable = 2;
 
                                         private static void setValue() {
-                                           int i = 1;
-                                           i = staticMethod();
+                                            int i = 1;
+                                            i = staticMethod();
                                         }
 
                                         private static int staticMethod() {
@@ -7988,7 +7988,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                                         }
 
                                         private String getSomethingElse() {
-                                            return getSomething();
+                                            return staticVariable;
                                         }
                                     }
                                 """,

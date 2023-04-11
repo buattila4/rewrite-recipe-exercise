@@ -3,6 +3,7 @@ package org.openrewrite.java.cleanup;
 import org.openrewrite.*;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.JavaTemplate;
 import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.marker.JavaVersion;
 import org.openrewrite.java.search.UsesJavaVersion;
@@ -120,7 +121,8 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
                     List<J.Modifier> mod = Arrays.asList(
                             new J.Modifier(Tree.randomId(), Space.build(" ", emptyList()), Markers.EMPTY,
                                     J.Modifier.Type.Static, emptyList()));
-                    md = md.withModifiers(ListUtils.insertAll(md.getModifiers(), 1, mod));
+
+                    md = autoFormat(md.withModifiers(ListUtils.insertAll(md.getModifiers(), 1, mod)), ctx);
                 }
             }
 

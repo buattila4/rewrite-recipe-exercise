@@ -3,10 +3,7 @@ package org.openrewrite.java.cleanup;
 import org.openrewrite.*;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaIsoVisitor;
-import org.openrewrite.java.JavaTemplate;
-import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.marker.JavaVersion;
-import org.openrewrite.java.search.UsesJavaVersion;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J;
 import org.openrewrite.marker.Marker;
@@ -335,6 +332,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         } else if (exp instanceof J.NewClass) {
             final J.NewClass nc = (J.NewClass) exp;
             if (!processArguments(nc.getArguments(), inputVariables, localVariables, variablesToCheck,
+                    methodsToCheck)) {
+                return false;
+            }
+
+            if (nc.getBody() != null && !processBody(nc.getBody().getStatements(), inputVariables, localVariables,
+                    variablesToCheck,
                     methodsToCheck)) {
                 return false;
             }

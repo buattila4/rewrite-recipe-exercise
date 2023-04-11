@@ -8010,4 +8010,403 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
         );
     }
 
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private static void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public static void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = instanceVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        public final void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = instanceVariable;
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = staticMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = instanceMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodWithAnonymousClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final void hello() {
+                                            I i = new I() {
+                                                @Override
+                                                public void doSomething() {
+                                                    String p = instanceMethod();
+                                                }
+
+                                                @Override
+                                                public void doThat() {
+                                                }
+                                            };
+                                        }
+
+                                        private static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    interface I {
+
+                                        void doSomething();
+
+                                        void doThat();
+                                    }
+                                """
+                )
+        );
+    }
 }

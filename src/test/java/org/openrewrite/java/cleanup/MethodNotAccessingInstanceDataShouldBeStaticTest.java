@@ -5,6 +5,7 @@ import org.openrewrite.test.RecipeSpec;
 import org.openrewrite.test.RewriteTest;
 
 import static org.openrewrite.java.Assertions.java;
+import static org.openrewrite.java.Assertions.version;
 
 public class MethodNotAccessingInstanceDataShouldBeStaticTest implements RewriteTest {
     @Override
@@ -5757,232 +5758,240 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
     @Test
     void addsStaticToPrivateMethodNotUsingInstanceVariableFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            private String getSomething() {
-                                                return staticVariable;
-                                            }
-                                        }
-                                    }
-                                """,
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            private static String getSomething() {
-                                                return staticVariable;
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    private String getSomething() {
+                                                        return staticVariable;
+                                                    }
+                                                }
+                                            }
+                                        """,
+                                """
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    private static String getSomething() {
+                                                        return staticVariable;
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void addsStaticToFinalMethodNotUsingInstanceVariableFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            public final String getSomething() {
-                                                return staticVariable;
-                                            }
-                                        }
-                                    }
-                                """,
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            public static String getSomething() {
-                                                return staticVariable;
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    public final String getSomething() {
+                                                        return staticVariable;
+                                                    }
+                                                }
+                                            }
+                                        """,
+                                """
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    public static String getSomething() {
+                                                        return staticVariable;
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void notAddingStaticToPrivateMethodUsingInstanceVariableFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            private String getSomething() {
-                                                return instanceVariable;
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    private String getSomething() {
+                                                        return instanceVariable;
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void notAddingStaticToFinalMethodUsingInstanceVariableFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticVariable = "something";
-                                        private String instanceVariable = "anything";
-
-                                        class Inner {
-                                            public final String getSomething() {
-                                                return instanceVariable;
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    public final String getSomething() {
+                                                        return instanceVariable;
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void addsStaticToPrivateMethodNotUsingInstanceMethodFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            private String getSomething() {
-                                                return staticMethod();
-                                            }
-                                        }
-                                    }
-                                """,
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            private static String getSomething() {
-                                                return staticMethod();
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    private String getSomething() {
+                                                        return staticMethod();
+                                                    }
+                                                }
+                                            }
+                                        """,
+                                """
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    private static String getSomething() {
+                                                        return staticMethod();
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void addsStaticToFinalMethodNotUsingInstanceMethodFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            public final String getSomething() {
-                                                return staticMethod();
-                                            }
-                                        }
-                                    }
-                                """,
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            public static String getSomething() {
-                                                return staticMethod();
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    public final String getSomething() {
+                                                        return staticMethod();
+                                                    }
+                                                }
+                                            }
+                                        """,
+                                """
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    public static String getSomething() {
+                                                        return staticMethod();
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void notAddingStaticToPrivateMethodUsingInstanceMethodFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            private String getSomething() {
-                                                return instanceMethod();
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    private String getSomething() {
+                                                        return instanceMethod();
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
     @Test
     void notAddingStaticToFinalMethodUsingInstanceMethodFromOuterClass() {
         rewriteRun(
-                java(
-                        """
-                                    class A {
-                                        private static String staticMethod() {
-                                            return "something";
-                                        }
-
-                                        public void instanceMethod() {
-                                        }
-
-                                        class Inner {
-                                            public final String getSomething() {
-                                                return instanceMethod();
-                                            }
-                                        }
-                                    }
+                version(
+                        java(
                                 """
-                )
+                                            class A {
+                                                private static String staticMethod() {
+                                                    return "something";
+                                                }
+
+                                                public void instanceMethod() {
+                                                }
+
+                                                class Inner {
+                                                    public final String getSomething() {
+                                                        return instanceMethod();
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 16)
         );
     }
 
@@ -7943,4 +7952,26 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void notAddingStaticToPrivateMethodInInnerClassNotHavingCorrectJavaVersion() {
+        rewriteRun(
+                version(
+                        java(
+                                """
+                                            class A {
+                                                private static String staticVariable = "something";
+                                                private String instanceVariable = "anything";
+
+                                                class Inner {
+                                                    private String getSomething() {
+                                                        return instanceVariable;
+                                                    }
+                                                }
+                                            }
+                                        """
+                        ), 8)
+        );
+    }
+
 }

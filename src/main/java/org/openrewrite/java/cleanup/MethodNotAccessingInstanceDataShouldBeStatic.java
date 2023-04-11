@@ -3,8 +3,11 @@ package org.openrewrite.java.cleanup;
 import org.openrewrite.*;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.marker.JavaVersion;
+import org.openrewrite.java.search.UsesJavaVersion;
 import org.openrewrite.java.tree.*;
 import org.openrewrite.java.tree.J;
+import org.openrewrite.marker.Marker;
 import org.openrewrite.marker.Markers;
 
 import java.util.*;
@@ -14,6 +17,7 @@ import static java.util.Collections.emptyList;
 
 public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private static final String SUPER_KEYWORD = "super";
+    private static final int MIN_JAVA_VERSION_FOR_INNER_CLASSES = 16;
 
     @Override
     public String getDisplayName() {
@@ -42,6 +46,11 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
 
             if (!md.hasModifier(J.Modifier.Type.Static) && (md.hasModifier(
                     J.Modifier.Type.Private) || md.hasModifier(J.Modifier.Type.Final))) {
+
+                if (!checkUpdateEligibility(getCursor())) {
+                    return md;
+                }
+
                 final Set<String> localVariables = new HashSet<>();
                 final Set<String> inputVariables = new HashSet<>();
                 final Map<String, Set<JavaType.Variable>> variablesToCheck = new HashMap<>();
@@ -103,6 +112,38 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
 
             return md;
         }
+    }
+
+    private static boolean checkUpdateEligibility(final Cursor cursor) {
+        if (hasOuterClass(cursor.getParent().getParent().getParent())) {
+            J.CompilationUnit cu = null;
+
+            for (Cursor parent = cursor; parent != null; parent = parent.getParent()) {
+                if (parent.getValue() instanceof J.CompilationUnit) {
+                    cu = parent.getValue();
+                }
+            }
+
+            for (Marker m : cu.getMarkers().getMarkers()) {
+                if (m instanceof JavaVersion) {
+                    final JavaVersion jv = (JavaVersion) m;
+
+                    if (jv.getMajorVersion() >= MIN_JAVA_VERSION_FOR_INNER_CLASSES) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    private static boolean hasOuterClass(final Cursor cursor) {
+        return cursor.getParent() != null && cursor.getParent()
+                .getParent() != null && cursor.getParent().getParent()
+                .getParent() != null && cursor.getParent()
+                .getParent().getParent().getValue() instanceof J.ClassDeclaration;
     }
 
     private static boolean processBody(final List<Statement> statements, final Set<String> inputVariables,
@@ -492,62 +533,59 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private static void collectInstanceDataFromOuterClass(final Cursor parent,
                                                           final Map<String, Set<JavaType.Variable>> staticVariables,
                                                           final Map<String, Set<JavaType.Method>> staticMethods) {
-        if (parent.getValue() instanceof J.ClassDeclaration) {
-            final J.ClassDeclaration parentClass = parent.getValue();
+        final J.ClassDeclaration parentClass = parent.getValue();
 
-            for (Statement s : parentClass.getBody().getStatements()) {
-                if (s instanceof J.VariableDeclarations) {
-                    final J.VariableDeclarations vd = (J.VariableDeclarations) s;
+        for (Statement s : parentClass.getBody().getStatements()) {
+            if (s instanceof J.VariableDeclarations) {
+                final J.VariableDeclarations vd = (J.VariableDeclarations) s;
 
-                    if (vd.hasModifier(J.Modifier.Type.Static)) {
-                        for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
-                            final String variableName = v.getSimpleName();
-                            final Set<JavaType.Variable> variables = staticVariables.getOrDefault(variableName,
-                                    new HashSet<>());
-                            variables.add(v.getVariableType());
-                            staticVariables.put(variableName, variables);
-                        }
-                    }
-                } else if (s instanceof J.MethodDeclaration) {
-                    final J.MethodDeclaration md = (J.MethodDeclaration) s;
-                    if (md.hasModifier(J.Modifier.Type.Static)) {
-                        final String methodName = md.getSimpleName();
-                        final Set<JavaType.Method> methods = staticMethods.getOrDefault(methodName, new HashSet<>());
-                        methods.add(md.getMethodType());
-                        staticMethods.put(methodName, methods);
-                    }
-                }
-            }
-
-            if (parent.getParent() != null && parent.getParent().getParent() != null && parent.getParent().getParent()
-                    .getParent() != null) {
-                collectInstanceDataFromOuterClass(parent.getParent().getParent().getParent(), staticVariables,
-                        staticMethods);
-            }
-
-            if (parentClass.getExtends() != null) {
-                JavaType.FullyQualified parentFq = TypeUtils.asFullyQualified(parentClass.getExtends().getType());
-                if (parentFq == null) {
-                    return;
-                }
-
-                for (JavaType.Method method : parentFq.getMethods()) {
-                    if (method.hasFlags(Flag.Static)) {
-                        final String methodName = method.getName();
-                        final Set<JavaType.Method> methods = staticMethods.getOrDefault(methodName, new HashSet<>());
-                        methods.add(method);
-                        staticMethods.put(methodName, methods);
-                    }
-                }
-
-                for (JavaType.Variable variable : parentFq.getMembers()) {
-                    if (variable.hasFlags(Flag.Static)) {
-                        final String variableName = variable.getName();
+                if (vd.hasModifier(J.Modifier.Type.Static)) {
+                    for (J.VariableDeclarations.NamedVariable v : vd.getVariables()) {
+                        final String variableName = v.getSimpleName();
                         final Set<JavaType.Variable> variables = staticVariables.getOrDefault(variableName,
                                 new HashSet<>());
-                        variables.add(variable);
+                        variables.add(v.getVariableType());
                         staticVariables.put(variableName, variables);
                     }
+                }
+            } else if (s instanceof J.MethodDeclaration) {
+                final J.MethodDeclaration md = (J.MethodDeclaration) s;
+                if (md.hasModifier(J.Modifier.Type.Static)) {
+                    final String methodName = md.getSimpleName();
+                    final Set<JavaType.Method> methods = staticMethods.getOrDefault(methodName, new HashSet<>());
+                    methods.add(md.getMethodType());
+                    staticMethods.put(methodName, methods);
+                }
+            }
+        }
+
+        if (hasOuterClass(parent)) {
+            collectInstanceDataFromOuterClass(parent.getParent().getParent().getParent(), staticVariables,
+                    staticMethods);
+        }
+
+        if (parentClass.getExtends() != null) {
+            JavaType.FullyQualified parentFq = TypeUtils.asFullyQualified(parentClass.getExtends().getType());
+            if (parentFq == null) {
+                return;
+            }
+
+            for (JavaType.Method method : parentFq.getMethods()) {
+                if (method.hasFlags(Flag.Static)) {
+                    final String methodName = method.getName();
+                    final Set<JavaType.Method> methods = staticMethods.getOrDefault(methodName, new HashSet<>());
+                    methods.add(method);
+                    staticMethods.put(methodName, methods);
+                }
+            }
+
+            for (JavaType.Variable variable : parentFq.getMembers()) {
+                if (variable.hasFlags(Flag.Static)) {
+                    final String variableName = variable.getName();
+                    final Set<JavaType.Variable> variables = staticVariables.getOrDefault(variableName,
+                            new HashSet<>());
+                    variables.add(variable);
+                    staticVariables.put(variableName, variables);
                 }
             }
         }

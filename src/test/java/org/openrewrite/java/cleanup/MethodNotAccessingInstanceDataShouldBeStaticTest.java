@@ -7974,4 +7974,40 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
         );
     }
 
+    @Test
+    void addingStaticToPrivateMethodsInTheSameClassOneReferencingTheOtherButNotUsingInstanceData() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private String getSomething() {
+                                            return getSomethingElse();
+                                        }
+
+                                        private String getSomethingElse() {
+                                            return getSomething();
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+
+                                        private static String getSomething() {
+                                            return getSomethingElse();
+                                        }
+
+                                        private static String getSomethingElse() {
+                                            return staticVariable;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
 }

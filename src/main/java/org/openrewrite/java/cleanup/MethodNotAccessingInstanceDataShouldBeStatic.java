@@ -3,6 +3,7 @@ package org.openrewrite.java.cleanup;
 import org.openrewrite.*;
 import org.openrewrite.internal.ListUtils;
 import org.openrewrite.java.JavaIsoVisitor;
+import org.openrewrite.java.MethodMatcher;
 import org.openrewrite.java.marker.JavaVersion;
 import org.openrewrite.java.search.UsesJavaVersion;
 import org.openrewrite.java.tree.*;
@@ -40,6 +41,19 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     }
 
     private static class MakePrivateOrFinalMethodsFinalVisitor extends JavaIsoVisitor<ExecutionContext> {
+
+        @Override
+        public JavaSourceFile visitJavaSourceFile(JavaSourceFile cu, ExecutionContext executionContext) {
+            JavaSourceFile c = super.visitJavaSourceFile(cu, executionContext);
+
+            while (c != cu) {
+                cu = c;
+                c = super.visitJavaSourceFile(cu, executionContext);
+            }
+
+            return cu;
+        }
+
         @Override
         public J.MethodDeclaration visitMethodDeclaration(J.MethodDeclaration methodDecl, ExecutionContext ctx) {
             J.MethodDeclaration md = super.visitMethodDeclaration(methodDecl, ctx);

@@ -4058,6 +4058,7 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 java(
                         """
                                     class A {
+                                        private int staticVariable = 2;
                                         private int instanceVariable = 2;
 
                                         public final void setValue() {

@@ -16,6 +16,12 @@ import static java.util.Collections.emptyList;
 
 public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
     private static final String SUPER_KEYWORD = "super";
+    private static final String SERIALIZABLE_CLASS = "java.io.Serializable";
+    private static final String WRITE_OBJECT = "writeObject";
+    private static final String READ_OBJECT = "readObject";
+    private static final String READ_OBJECT_NO_DATA = "readObjectNoData";
+    private static final String OBJECT_OUTPUT_STREAM_CLASS = "java.io.ObjectOutputStream";
+    private static final String OBJECT_INPUT_STREAM_CLASS = "java.io.ObjectInputStream";
     private static final int MIN_JAVA_VERSION_FOR_INNER_CLASSES = 16;
 
     @Override
@@ -59,7 +65,7 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             if (!md.hasModifier(J.Modifier.Type.Static) && (md.hasModifier(
                     J.Modifier.Type.Private) || md.hasModifier(J.Modifier.Type.Final))) {
 
-                if (!checkUpdateEligibility(getCursor())) {
+                if (!checkUpdateEligibility(getCursor(), md)) {
                     return md;
                 }
 
@@ -127,7 +133,12 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
         }
     }
 
-    private static boolean checkUpdateEligibility(final Cursor cursor) {
+    private static boolean checkUpdateEligibility(final Cursor cursor, final J.MethodDeclaration md) {
+        return checkJavaVersionIfInInnerClass(cursor) && checkIfImplementsSerializable(md,
+                cursor.getParent().getParent().getParent().getValue());
+    }
+
+    private static boolean checkJavaVersionIfInInnerClass(final Cursor cursor) {
         if (hasOuterClass(cursor.getParent().getParent().getParent())) {
             J.CompilationUnit cu = null;
 
@@ -149,6 +160,37 @@ public class MethodNotAccessingInstanceDataShouldBeStatic extends Recipe {
             return false;
         }
 
+        return true;
+    }
+
+    private static boolean checkIfImplementsSerializable(final J.MethodDeclaration md, final J.ClassDeclaration cd) {
+        if (cd.getImplements() != null) {
+            for (TypeTree t : cd.getImplements()) {
+                if (t.getType().toString().equals(SERIALIZABLE_CLASS)) {
+                    final JavaType.Method m = md.getMethodType();
+
+                    if (m.getName()
+                            .equals(WRITE_OBJECT) && m.hasFlags(
+                            Flag.Private) && m.getReturnType() == JavaType.Primitive.Void && m.getParameterTypes()
+                            .size() == 1 && m.getParameterTypes().get(0).toString()
+                            .equals(OBJECT_OUTPUT_STREAM_CLASS)) {
+                        return false;
+                    } else if (m.getName()
+                            .equals(READ_OBJECT) && m.hasFlags(
+                            Flag.Private) && m.getReturnType() == JavaType.Primitive.Void && m.getParameterTypes()
+                            .size() == 1 && m.getParameterTypes().get(0).toString().equals(OBJECT_INPUT_STREAM_CLASS)) {
+                        return false;
+                    } else if (m.getName()
+                            .equals(READ_OBJECT_NO_DATA) && m.hasFlags(
+                            Flag.Private) && m.getReturnType() == JavaType.Primitive.Void && m.getParameterTypes()
+                            .isEmpty()) {
+                        return false;
+                    }
+
+                    return true;
+                }
+            }
+        }
         return true;
     }
 

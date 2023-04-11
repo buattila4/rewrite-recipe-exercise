@@ -8409,4 +8409,58 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void notAddingStaticToPrivateMethodWhichMatchingTheRulesExceptionList() {
+        rewriteRun(
+                java(
+                        """
+                                    import java.io.IOException;
+                                    import java.io.ClassNotFoundException;
+                                    import java.io.ObjectStreamException;
+                                    import java.io.ObjectOutputStream;
+                                    import java.io.ObjectInputStream;
+                                    import java.io.Serializable;
+
+                                    public class B implements Serializable {
+
+                                        private void writeObject(ObjectOutputStream os) throws IOException {
+                                        }
+
+                                        private void readObject(ObjectInputStream os) throws IOException, ClassNotFoundException {
+                                        }
+
+                                        private void readObjectNoData() throws ObjectStreamException {
+                                        }
+
+                                        private void doThis() {
+                                        }
+                                    }
+                                """,
+                        """
+                                    import java.io.IOException;
+                                    import java.io.ClassNotFoundException;
+                                    import java.io.ObjectStreamException;
+                                    import java.io.ObjectOutputStream;
+                                    import java.io.ObjectInputStream;
+                                    import java.io.Serializable;
+
+                                    public class B implements Serializable {
+
+                                        private void writeObject(ObjectOutputStream os) throws IOException {
+                                        }
+
+                                        private void readObject(ObjectInputStream os) throws IOException, ClassNotFoundException {
+                                        }
+
+                                        private void readObjectNoData() throws ObjectStreamException {
+                                        }
+
+                                        private static void doThis() {
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

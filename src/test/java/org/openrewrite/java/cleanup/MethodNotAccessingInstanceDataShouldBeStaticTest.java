@@ -7587,4 +7587,238 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceVariableFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        private String getSomething() {
+                                            return staticVariable;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        private static String getSomething() {
+                                            return staticVariable;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceVariableFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        public final String getSomething() {
+                                            return staticVariable;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        public static String getSomething() {
+                                            return staticVariable;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceVariableFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        private String getSomething() {
+                                            return instanceVariable;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceVariableFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private static String staticVariable = "something";
+                                        private String instanceVariable = "anything";
+                                    }
+
+                                    class B extends A {
+                                        public final String getSomething() {
+                                            return instanceVariable;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingInstanceMethodFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        private String getSomething() {
+                                            return staticMethod();
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        private static String getSomething() {
+                                            return staticMethod();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingInstanceMethodFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        public final String getSomething() {
+                                            return staticMethod();
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public void instanceMethod() {
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        public static String getSomething() {
+                                            return staticMethod();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingInstanceMethodFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "anything";
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        private String getSomething() {
+                                            return instanceMethod();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingInstanceMethodFromParentClass() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public static String staticMethod() {
+                                            return "something";
+                                        }
+
+                                        public String instanceMethod() {
+                                            return "anything";
+                                        }
+                                    }
+
+                                    class B extends A {
+                                        public final String getSomething() {
+                                            return instanceMethod();
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }

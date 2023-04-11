@@ -7821,4 +7821,126 @@ public class MethodNotAccessingInstanceDataShouldBeStaticTest implements Rewrite
                 )
         );
     }
+
+    @Test
+    void addsStaticToPrivateMethodNotUsingOverloadedInstanceMethod() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private String getSomething() {
+                                            return method();
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        private static String getSomething() {
+                                            return method();
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void addsStaticToFinalMethodNotUsingOverloadedInstanceMethod() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final String getSomething() {
+                                            return method();
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """,
+                        """
+                                    class A {
+                                        public static String getSomething() {
+                                            return method();
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToPrivateMethodUsingOverloadedInstanceMethod() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        private String getSomething() {
+                                            return method("anything");
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
+
+    @Test
+    void notAddingStaticToFinalMethodUsingOverloadedInstanceMethod() {
+        rewriteRun(
+                java(
+                        """
+                                    class A {
+                                        public final String getSomething() {
+                                            return method("anything");
+                                        }
+
+                                        private static String method() {
+                                            return "something";
+                                        }
+
+                                        public String method(String s) {
+                                            return s;
+                                        }
+                                    }
+                                """
+                )
+        );
+    }
 }
